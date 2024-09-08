@@ -1,12 +1,13 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import json
 
 app = Flask(__name__)
 CORS(app)
 
 
 @app.route('/verify', methods=['POST'])
-def verify_named_entities():
+def get_named_entity():
     try:
         data = request.get_json()
 
@@ -18,20 +19,22 @@ def verify_named_entities():
         dob = form_data.get('dob')
         aadhaar_number = form_data.get('aadhaarNumber')
 
-        verification_result = {
-            "name_verified": name in pdf_text,
-            "father_name_verified": father_name in pdf_text,
-            "dob_verified": dob in pdf_text,
-            "aadhaar_number_verified": aadhaar_number in pdf_text
+        named_entity = {
+            "name": name,
+            "father_name": father_name,
+            "dob": dob,
+            "aadhaar_number": aadhaar_number
         }
+        unstructured_data = {"unstructured_data": pdf_text}
+        combined_data = {**named_entity, **unstructured_data}
 
-        if all(verification_result.values()):
-            return jsonify({"message": "All named entities verified successfully."}), 200
-        else:
-            return jsonify({"message": "Some named entities do not match.", "result": verification_result}), 400
+        print(json.dumps(combined_data, indent=4))
+
+        return jsonify(combined_data), 200
 
     except Exception as e:
-        return jsonify({"message": str(e)}), 500
+        print(f"An error occurred: {e}")
+        return jsonify({"error": str(e)}), 400
 
 
 if __name__ == '__main__':
