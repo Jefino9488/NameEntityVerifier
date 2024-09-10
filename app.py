@@ -1,8 +1,8 @@
 from flask import Flask, request, jsonify
 import google.generativeai as genai
 from load_creds import load_creds
+import typing_extensions as typing
 from flask_cors import CORS
-from google.ai.generativelanguage_v1beta.types import content
 import json
 
 app = Flask(__name__)
@@ -10,32 +10,10 @@ CORS(app)
 creds = load_creds()
 genai.configure(credentials=creds)
 
-generation_config = {
-    "temperature": 0.7,
-    "top_p": 0.95,
-    "top_k": 64,
-    "max_output_tokens": 8192,
-    "response_schema": content.Schema(
-        content.Type.OBJECT,
-        enum={},
-        required={
-            "is_name_verified": True,
-            "doc_type": True,
-            "is_DOB_verified": True,
-            "is_document_verified": True
-        },
-        properties={
-            "is_name_verified": content.Schema(content.Type.BOOLEAN, ),
-            "doc_type": content.Schema(content.Type.STRING, ),
-            "is_address_verified": content.Schema(content.Type.BOOLEAN, ),
-            "is_DOB_verified": content.Schema(content.Type.BOOLEAN, ),
-            "is_father_name_verified": content.Schema(content.Type.BOOLEAN, ),
-            "is_addhar_no_verified": content.Schema(content.Type.BOOLEAN, ),
-            "is_document_verified": content.Schema(content.Type.BOOLEAN, ),
-        },
-    ),
-    "response_mime_type": "application/json",
-}
+
+def load_chat_history(file_path):
+    with open(file_path, 'r') as file:
+        return json.load(file)
 
 
 @app.route('/', methods=['GET'])
@@ -64,24 +42,47 @@ def get_named_entity():
         }
         unstructured_data = {"unstructured_data": pdf_text}
         combined_data = {**named_entity, **unstructured_data}
-
+        with open('unstructured_data_log.txt', 'a', encoding='utf-8') as f:
+            f.write(f"Input:\n{combined_data}\n\n")
         print(json.dumps(combined_data, indent=4))
+        result = crossVerify(combined_data)
 
-        return jsonify(combined_data), 200
+        return jsonify({"message": result.text}), 200
 
     except Exception as e:
         print(f"An error occurred: {e}")
         return jsonify({"error": str(e)}), 400
 
 
+class VerifySchema(typing.TypedDict):
+    doc_tpe: str
+    is_name_verified: bool
+    is_dob_verified: bool
+    father_name_verified: bool
+    is_addhar_no_verified: bool
+    is_doc_verified: bool
+
+
+model = genai.GenerativeModel('gemini-1.5-flash',
+                              safety_settings="BLOCK_ONLY_HIGH",
+                              generation_config={"response_mime_type": "application/json",
+                                                 "temperature": 0.7,
+                                                 "top_p": 0.95,
+                                                 "top_k": 64,
+                                                 "max_output_tokens": 8192,
+                                                 "response_schema": VerifySchema},
+                              system_instruction="input:{\n    \"name\": \"\",\n    \"father_name\": \"\",\n    \"dob\": \"\",\n    \"aadhaar_number\": \"\",\n    \"unstructured_data\": \"\"\n}\n\nif the named entities in input is same as in unstructured return true else return false\nif any of the entity is not matched return document verification as false else true",
+                              )
+
+chat_history = load_chat_history('chat_history.json')
+chat_session = model.start_chat(
+    history=chat_history
+)
+
+
 def crossVerify(combined_data):
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-pro",
-        generation_config=generation_config,
-        system_instruction="{\n    \"name\": \"\",\n    \"father_name\": \"\",\n    \"dob\": \"\",\n    \"aadhaar_number\": \"\",\n    \"unstructured_data\": \"\"\n}\n\nif the named entities is same as in unstructured return true else return false\nif any of the entity is not matched return document verification as false else true",
-    )
     prompt = combined_data
-    result = model.generate_content(prompt)
+    result = chat_session.send_message(f"""{prompt}""")
     print(result)
     return result
 
