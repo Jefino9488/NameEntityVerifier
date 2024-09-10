@@ -47,7 +47,25 @@ def get_named_entity():
         print(json.dumps(combined_data, indent=4))
         result = crossVerify(combined_data)
 
-        return jsonify({"message": result.text}), 200
+        parsed_result = json.loads(result.text)
+        if parsed_result['is_doc_verified']:
+            message = "The document has been successfully verified."
+        else:
+            message = "The document verification failed."
+            reasons = []
+            if not parsed_result['is_name_verified']:
+                reasons.append("Name does not match.")
+            if not parsed_result['is_father_name_verified']:
+                reasons.append("Father's name does not match.")
+            if not parsed_result['is_dob_verified']:
+                reasons.append("Date of birth does not match.")
+            if not parsed_result['is_addhar_no_verified']:
+                reasons.append("Aadhaar number does not match.")
+
+            sub_status = "Reasons: " + ", ".join(reasons) if reasons else "No specific reason provided."
+            message = f"{message} {sub_status}"
+
+        return jsonify({"message": message}), 200
 
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -55,10 +73,10 @@ def get_named_entity():
 
 
 class VerifySchema(typing.TypedDict):
-    doc_tpe: str
+    doc_type: str
     is_name_verified: bool
     is_dob_verified: bool
-    father_name_verified: bool
+    is_father_name_verified: bool
     is_addhar_no_verified: bool
     is_doc_verified: bool
 
@@ -81,8 +99,7 @@ chat_session = model.start_chat(
 
 
 def crossVerify(combined_data):
-    prompt = combined_data
-    result = chat_session.send_message(f"""{prompt}""")
+    result = chat_session.send_message(f"""{combined_data}""")
     print(result)
     return result
 
