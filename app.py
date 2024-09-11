@@ -92,13 +92,10 @@ model = genai.GenerativeModel('gemini-1.5-flash',
                               system_instruction="input:{\n    \"name\": \"\",\n    \"father_name\": \"\",\n    \"dob\": \"\",\n    \"aadhaar_number\": \"\",\n    \"unstructured_data\": \"\"\n}\n\nif the named entities in input is same as in unstructured return true else return false\nif any of the entity is not matched return document verification as false else true",
                               )
 
-chat_history = load_chat_history('chat_history.json')
-chat_session = model.start_chat(
-    history=chat_history
-)
-
 
 def crossVerify(combined_data):
+    chat_history = load_chat_history('chat_history.json')
+    chat_session = model.start_chat(history=chat_history)
     result = chat_session.send_message(f"""{combined_data}""")
     print(result)
     return result
