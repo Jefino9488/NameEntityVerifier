@@ -1,14 +1,12 @@
 from flask import Flask, request, jsonify
 import google.generativeai as genai
-from load_creds import load_creds
 import typing_extensions as typing
 from flask_cors import CORS
 import json
 
 app = Flask(__name__)
 CORS(app)
-creds = load_creds()
-genai.configure(credentials=creds)
+genai.configure(api_key="")
 
 
 def load_chat_history(file_path):
