@@ -3,7 +3,6 @@
 ./venv
 .env
 ./idx
-./.venv
 chat_history.json
 schema.json
 token.json
