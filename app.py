@@ -1,15 +1,17 @@
 from flask import Flask, request, jsonify
 import google.generativeai as genai
-import typing_extensions as typing
+from dotenv import load_dotenv
 from flask_cors import CORS
 import json
+import os
 
 app = Flask(__name__)
 CORS(app)
-genai.configure(api_key="")
+load_dotenv()
+genai.configure(api_key=os.getenv('API_KEY'))
 
 
-def load_chat_history(file_path):
+def load_json(file_path):
     with open(file_path, 'r') as file:
         return json.load(file)
 
@@ -46,10 +48,12 @@ def get_named_entity():
         result = crossVerify(combined_data)
 
         parsed_result = json.loads(result.text)
-        if parsed_result['is_doc_verified']:
-            message = "The document has been successfully verified."
+        if parsed_result['is_document_verified']:
+            document_type = parsed_result['doc_type']
+            message = f"The {document_type} verification was successful."
         else:
-            message = "The document verification failed."
+            document_type = parsed_result['doc_type']
+            message = f"The {document_type} verification was Failed."
             reasons = []
             if not parsed_result['is_name_verified']:
                 reasons.append("Name does not match.")
@@ -70,13 +74,7 @@ def get_named_entity():
         return jsonify({"error": str(e)}), 400
 
 
-class VerifySchema(typing.TypedDict):
-    doc_type: str
-    is_name_verified: bool
-    is_dob_verified: bool
-    is_father_name_verified: bool
-    is_addhar_no_verified: bool
-    is_doc_verified: bool
+VerifySchema = load_json('schema.json')
 
 
 model = genai.GenerativeModel('gemini-1.5-flash',
@@ -92,7 +90,7 @@ model = genai.GenerativeModel('gemini-1.5-flash',
 
 
 def crossVerify(combined_data):
-    chat_history = load_chat_history('chat_history.json')
+    chat_history = load_json('chat_history.json')
     chat_session = model.start_chat(history=chat_history)
     result = chat_session.send_message(f"""{combined_data}""")
     print(result)
