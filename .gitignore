@@ -2,3 +2,5 @@
 ./templates
 ./venv
 .env
+./idx
+./.venv
