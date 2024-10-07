@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "properties": {
+    "is_aadhaar": { "type": "boolean" },
+    "is_name_verified": { "type": "boolean" },
+    "is_dob_verified": { "type": "boolean" },
+    "is_father_name_verified": { "type": "boolean" },
+    "is_addhar_no_verified": { "type": "boolean" },
+    "is_document_verified": { "type": "boolean" }
+  },
+  "required": [
+    "is_aadhaar",
+    "is_name_verified",
+    "is_dob_verified",
+    "is_father_name_verified",
+    "is_addhar_no_verified",
+    "is_document_verified"
+  ]
+}

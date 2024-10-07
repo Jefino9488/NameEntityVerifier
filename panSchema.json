@@ -1,19 +1,17 @@
 {
   "type": "object",
   "properties": {
-    "doc_type": { "type": "string" },
+    "is_pan": { "type": "boolean" },
     "is_name_verified": { "type": "boolean" },
     "is_dob_verified": { "type": "boolean" },
-    "is_father_name_verified": { "type": "boolean" },
-    "is_addhar_no_verified": { "type": "boolean" },
+    "is_pan_no_verified": { "type": "boolean" },
     "is_document_verified": { "type": "boolean" }
   },
   "required": [
-    "doc_type",
+    "is_pan",
     "is_name_verified",
     "is_dob_verified",
-    "is_father_name_verified",
-    "is_addhar_no_verified",
+    "is_pan_no_verified",
     "is_document_verified"
   ]
 }

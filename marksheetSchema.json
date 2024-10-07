@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "is_marksheet": { "type": "boolean" },
+    "is_name_verified": { "type": "boolean" },
+    "is_dob_verified": { "type": "boolean" },
+    "is_marksheet_verified": { "type": "boolean" },
+    "is_document_verified": { "type": "boolean" }
+  },
+  "required": [
+    "is_marksheet",
+    "is_name_verified",
+    "is_dob_verified",
+    "is_marksheet_verified",
+    "is_document_verified"
+  ]
+}
