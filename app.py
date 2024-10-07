@@ -27,7 +27,7 @@ def get_named_entity():
         data = request.get_json()
 
         form_data = data.get('formData')
-        pdf_text = data.get('pdfText')
+        extracted_text = data.get('extractedText')
 
         name = form_data.get('name')
         father_name = form_data.get('fatherName')
@@ -40,11 +40,12 @@ def get_named_entity():
             "dob": dob,
             "aadhaar_number": aadhaar_number
         }
-        unstructured_data = {"unstructured_data": pdf_text}
+        unstructured_data = {"unstructured_data": extracted_text}
         combined_data = {**named_entity, **unstructured_data}
         with open('unstructured_data_log.txt', 'a', encoding='utf-8') as f:
             f.write(f"Input:\n{combined_data}\n\n")
         print(json.dumps(combined_data, indent=4))
+
         result = crossVerify(combined_data)
 
         parsed_result = json.loads(result.text)
@@ -53,7 +54,7 @@ def get_named_entity():
             message = f"The {document_type} verification was successful."
         else:
             document_type = parsed_result['doc_type']
-            message = f"The {document_type} verification was Failed."
+            message = f"The {document_type} verification failed."
             reasons = []
             if not parsed_result['is_name_verified']:
                 reasons.append("Name does not match.")
@@ -72,6 +73,7 @@ def get_named_entity():
     except Exception as e:
         print(f"An error occurred: {e}")
         return jsonify({"error": str(e)}), 400
+
 
 
 VerifySchema = load_json('schema.json')
